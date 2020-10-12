@@ -2,17 +2,48 @@
 {% block title %}To-Do App{% endblock %}
 
 {% block content %}
-  <div class="jumbotron">
+<div class="jumbotron">
     <h1 class="display-4">To-Do App</h1>
     <p class="lead">Just another to-do app.</p>
-  </div>
+</div>
 
-  <div class="row">
+<div class="row" style="width: 60%;">
     <div class="col-md-12">
-      <h2>Items</h2>
-      <ul class="list-group mb-4">
-        <!-- List the todo items here -->
-      </ul>
+        <h2>Items</h2>
+        <ul class="list-group mb-4">
+            {% for todo in todos %}
+            <li style="text-align: justify; padding-left: 0%; padding-right: 20%; align-self:left;">
+                <details>
+                    <summary>{{todo.title}}</summary>
+                    <p>{{todo.description }}</p>
+                </details>
+            </li>
+            {% endfor %}
+            <li style="text-align: justify; padding-left: 0%; padding-right: 20%; align-self:left;">
+                <details>
+                    <summary>Add another?</summary>
+                    <form method="POST" action="/todo" id="usrform">
+                        <ul style="list-style: none;">
+                            <li>
+                                <label for="title">Name:</label>
+                                <input type="text" id="title" name="title" form="usrform">
+                            </li>
+                            <li>
+                                <textarea rows="4" cols="50"
+                                          id="description"
+                                          name="description"
+                                          form="usrform">Enter description...</textarea></li>
+                            <li class="button">
+                                <button type="submit"
+                                        style="margin-left: .5em;
+                                         padding-left: 90px;
+                                          text-align: justify;">Submit Todo</button>
+                            </li>
+                        </ul>
+                    </form>
+                </details>
+            </li>
+        </ul>
     </div>
-  </div>
+</div>
 {% endblock %}
