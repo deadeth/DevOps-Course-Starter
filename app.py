@@ -23,12 +23,12 @@ def todolist():
 
 @app.route('/todo/{todoId}', methods=['GET'])
 @app.route('/todo/{todoId}/', methods=['GET'])
-def todolist():
+def gettodoitem():
     return render_template('index.html', todos=todos)
 
 
 @app.route('/todo/reset', methods=['GET'])
-def todoreset():
+def resettodos():
     todos.append({})
     todos.clear()
     return 'success'
@@ -41,13 +41,7 @@ def addtotodolist():
 
 
 def get_items():
-    """
-    Fetches all saved items from the session.
-
-    Returns:
-        list: The list of saved items.
-    """
-    return session.get('items', _DEFAULT_ITEMS)
+    return None
 
 
 def get_item(id):
