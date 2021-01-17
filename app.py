@@ -1,13 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+import requests
+from flask_config import Config
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import session_items as session
 
 app = Flask(__name__)
-app.config.from_object('flask_config.Config')
-
-todos = [
-    {'id': 1, 'title': 'First Todo', 'description': 'do this tomorrow'},
-    {'id': 2, 'title': 'Second Todo', 'description': 'do this day after'},
-    {'id': 3, 'title': 'Third Todo', 'description': 'do this day after that'}]
 
 
 @app.route('/')
@@ -18,83 +14,66 @@ def index():
 @app.route('/todo', methods=['GET'])
 @app.route('/todo/', methods=['GET'])
 def todolist():
-    return render_template('index.html', todos=todos)
+    return render_template('index.html', todos=None)
 
 
 @app.route('/todo/{todoId}', methods=['GET'])
 @app.route('/todo/{todoId}/', methods=['GET'])
 def gettodoitem():
-    return render_template('index.html', todos=todos)
+    return render_template('index.html', todos=None)
 
 
 @app.route('/todo/reset', methods=['GET'])
 def resettodos():
-    todos.append({})
-    todos.clear()
     return 'success'
 
 
+@app.route('/trello', methods=['GET'])
+def gettrelloinfo():
+    payload = {'member': Config.MEMBER_ID,
+               'key': Config.TRELLO_API_KEY,
+               'token': Config.TRELLO_TOKEN}
+    r = requests.get('https://api.trello.com/1/members/me', params=payload)
+    return jsonify(r.json())
+
+
+@app.route('/trello/boards', methods=['GET'])
+def getboards():
+    payload = {'fields': ['name', 'url'],
+               'key': Config.TRELLO_API_KEY,
+               'token': Config.TRELLO_TOKEN}
+    r = requests.get('https://api.trello.com/1/members/me/boards', params=payload)
+    return jsonify(r.json())
+
+
+@app.route('/trello/boards/<string:boardid>/lists', methods=['GET'])
+def getlistsofboard(boardid):
+    payload = {'fields': ['name', 'url'],
+               'key': Config.TRELLO_API_KEY,
+               'token': Config.TRELLO_TOKEN}
+    r = requests.get(f'https://api.trello.com/1/boards/{boardid}/lists', params=payload)
+    return jsonify(r.json())
+
+
+@app.route('/trello/list/<string:listid>', methods=['GET'])
+def getcardsoflist(listid):
+    payload = {'fields': ['name', 'url', 'closed', 'pos'],
+               'key': Config.TRELLO_API_KEY,
+               'token': Config.TRELLO_TOKEN}
+    r = requests.get(f'https://api.trello.com/1/lists/{listid}/cards', params=payload)
+    return jsonify(r.json())
+
+
 @app.route('/todo', methods=['POST'])
-def addtotodolist():
-    todos.append({'id': 4, 'title': request.form['title'], 'description': request.form['description']})
-    return render_template('index.html', todos=todos)
-
-
-def get_items():
-    return None
-
-
-def get_item(id):
-    """
-    Fetches the saved item with the specified ID.
-
-    Args:
-        id: The ID of the item.
-
-    Returns:
-        item: The saved item, or None if no items match the specified ID.
-    """
-    items = get_items()
-    return next((item for item in items if item['id'] == int(id)), None)
-
-
-def add_item(title):
-    """
-    Adds a new item with the specified title to the session.
-
-    Args:
-        title: The title of the item.
-
-    Returns:
-        item: The saved item.
-    """
-    items = get_items()
-
-    # Determine the ID for the item based on that of the previously added item
-    id = items[-1]['id'] + 1 if items else 0
-
-    item = {'id': id, 'title': title, 'status': 'Not Started'}
-
-    # Add the item to the list
-    items.append(item)
-    session['items'] = items
-
-    return item
-
-
-def save_item(item):
-    """
-    Updates an existing item in the session. If no existing item matches the ID of the specified item, nothing is saved.
-
-    Args:
-        item: The item to save.
-    """
-    existing_items = get_items()
-    updated_items = [item if item['id'] == existing_item['id'] else existing_item for existing_item in existing_items]
-
-    session['items'] = updated_items
-
-    return item
+def addtotodolist(name):
+    r = requests.post('https://api.trello.com/1/cards',
+                      data={'key': Config.TRELLO_API_KEY,
+                            'token': Config.TRELLO_TOKEN,
+                            'name': name,
+                            'idList': getboards[0]['id']
+                            })
+    rj = r.json()
+    return render_template('index.html', todos=None)
 
 
 if __name__ == '__main__':
